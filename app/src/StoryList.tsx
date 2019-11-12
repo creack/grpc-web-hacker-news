@@ -24,9 +24,7 @@ const StoryList: React.SFC<StoryListProps> = (props) => {
             }
           }}
         >
-          <Item.Content
-
-          >
+          <Item.Content>
             <Item.Header as="a">{story.title}</Item.Header>
             <Item.Extra><Icon  name="star" />{story.score} | <Icon  name="user" />{story.by}</Item.Extra>
           </Item.Content>
