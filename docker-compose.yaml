@@ -9,9 +9,17 @@ services:
       - 8901:8901
     volumes:
       - ./server:/app
+  client:
+    build: ./client
+    volumes:
+      - ./client:/app
   app:
     build: ./app
     ports:
       - 3000:3000
     volumes:
-      - ./app:/app
+      - ./app/public:/app/public
+      - ./app/src:/app/src
+      - ./app/tslint.json:/app/tslint.json
+      - ./app/tsconfig.json:/app/tsconfig.json
+      - ./app/tsconfig.test.json:/app/tsconfig.test.json
