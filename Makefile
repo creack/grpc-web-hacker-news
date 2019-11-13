@@ -1,29 +1,34 @@
-PROTOC = docker run --rm --user $(shell id -u):$(shell id -g) -e HOME -v ${HOME}:${HOME} -w ${PWD} -e GOPATH=${HOME}/go:/go creack/grpc:go1.13-protobuf3.9.0-grpc1.24.0-protocgengo1.3.2
+NAME  = hackernews
 
-JS_PROTOS = app/src/proto/hackernews_pb.d.ts app/src/proto/hackernews_pb.js app/src/proto/hackernews_pb_service.ts
-GO_PROTOS = server/proto/hackernews.pb.go
+PROTOC_I = creack/grpc:go1.13-protobuf3.9.0-grpc1.24.0-protocgengo1.3.2
+PROTOC   = docker run --rm --user $(shell id -u):$(shell id -g) -v ${PWD}:${PWD} -w ${PWD} ${PROTOC_I}
+PROTOCTS = ${PROTOC} --plugin=protoc-gen-ts=./app/node_modules/.bin/protoc-gen-ts
+
+PROTOS = server/proto/${NAME}.pb.go \
+         app/src/proto/${NAME}_pb.d.ts \
+         app/src/proto/${NAME}_pb.js \
+         app/src/proto/${NAME}_pb_service.ts
 
 .DEFAULT_GOAL = build
 
-${GO_PROTOS}: proto/hackernews.proto
+.PHONY: build clean
+
+server/proto/${NAME}.pb.go: proto/${NAME}.proto
 	@mkdir -p $(dir $@)
-	${PROTOC} --go_out=plugins=grpc:./$(dir $@) $<
+	${PROTOC} --go_out=plugins=grpc:./server $<
 
-app/src/proto/hackernews_pb.d.ts: proto/hackernews.proto
+app/src/proto/${NAME}_pb_service.ts: proto/${NAME}.proto
 	@mkdir -p $(dir $@)
-	${PROTOC} --plugin=protoc-gen-ts=./app/node_modules/.bin/protoc-gen-ts --ts_out=service=true:./$(dir $@) $<
+	${PROTOCTS} --ts_out=service=true:./app/src $<
 
-app/src/proto/hackernews_pb.js: proto/hackernews.proto
+app/src/proto/${NAME}_pb.d.ts: app/src/proto/${NAME}_pb_service.ts
+	@true
+
+app/src/proto/${NAME}_pb.js: proto/${NAME}.proto
 	@mkdir -p $(dir $@)
-	${PROTOC} --plugin=protoc-gen-ts=./app/node_modules/.bin/protoc-gen-ts --js_out=import_style=commonjs:./$(dir $@) $<
+	${PROTOCTS} --js_out=import_style=commonjs,binary:./app/src $<
 
-app/src/proto/hackernews_pb_service.ts: proto/hackernews.proto
-	@mkdir -p $(dir $@)
-	${PROTOC} --plugin=protoc-gen-ts=./app/node_modules/.bin/protoc-gen-ts --js_out=import_style=binary:./$(dir $@) $<
+build: ${PROTOS}
 
-.PHONY: build
-build: ${GO_PROTOS} ${JS_PROTOS}
-
-.PHONY: clean
 clean:
-	@rm -f ${GO_PROTOS} ${JS_PROTOS}
+	@rm -f ${PROTOS}
