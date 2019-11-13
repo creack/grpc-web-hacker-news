@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net"
 	"net/http"
 
 	"github.com/easyCZ/grpc-web-hacker-news/server/hackernews"
@@ -35,14 +36,26 @@ func main() {
 			AllowCredentials: true,
 			MaxAge:           300, // Maximum value not ignored by any of major browsers
 		}).Handler,
+		//middleware.NewGrpcWebMiddleware(wrappedGrpc).Handler,
 	)
 
 	router.Handle("/*", wrappedGrpc)
-
 	router.Get("/article-proxy", proxy.Article)
 
- 	println("ready2")
-	if err := http.ListenAndServe(":8900", wrappedGrpc); err != nil {
+	go func() {
+		lis, err := net.Listen("tcp", ":8901")
+		if err != nil {
+			panic(err)
+		}
+
+		println("ready1")
+		if err := grpcServer.Serve(lis); err != nil {
+			grpclog.Fatalf("failed starting http2 server: %v", err)
+		}
+	}()
+
+	println("ready2")
+	if err := http.ListenAndServe(":8900", router); err != nil {
 		grpclog.Fatalf("failed starting http2 server: %v", err)
 	}
 }

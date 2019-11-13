@@ -6,6 +6,7 @@ services:
     build: ./server
     ports:
       - 8900:8900
+      - 8901:8901
     volumes:
       - ./server:/app
   app:

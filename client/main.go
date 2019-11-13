@@ -10,11 +10,10 @@ import (
 func main() {
 	ctx := context.Background()
 
-	conn, err := grpc.Dial("localhost:8900", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:8901", grpc.WithInsecure(), grpc.WithUserAgent("application/grpc"))
 	if err != nil {
 		panic(err)
 	}
-
 
 	storyStream, err := hackernews_pb.NewHackerNewsServiceClient(conn).ListStories(ctx, &hackernews_pb.ListStoriesRequest{})
 	if err != nil {
