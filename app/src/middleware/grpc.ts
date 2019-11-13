@@ -1,5 +1,5 @@
 import { Action, Dispatch, Middleware, MiddlewareAPI } from 'redux';
-import { Code, grpc, Metadata, Transport } from 'grpc-web-client';
+import { grpc } from '@improbable-eng/grpc-web';
 import * as jspb from 'google-protobuf';
 
 const GRPC_WEB_REQUEST = 'GRPC_WEB_REQUEST';
@@ -18,15 +18,15 @@ export type GrpcActionPayload<RequestType extends jspb.Message, ResponseType ext
   // An instance of of the request message
   request: RequestType,
   // Additional metadata to attach to the request, the same as grpc-web
-  metadata?: Metadata.ConstructorArg,
+  metadata?: grpc.Metadata.ConstructorArg,
   // Called immediately before the request is started, useful for toggling a loading status
   onStart?: () => Action | void,
   // Called when response headers are received
-  onHeaders?: (headers: Metadata) => Action | void,
+  onHeaders?: (headers: grpc.Metadata) => Action | void,
   // Called on each incoming message
   onMessage?: (res: ResponseType) => Action | void,
   // Called at the end of a request, make sure to check the exit code
-  onEnd: (code: Code, message: string, trailers: Metadata) => Action | void,
+  onEnd: (code: grpc.Code, message: string, trailers: grpc.Metadata) => Action | void,
 };
 
 // Basic type for a gRPC Action
@@ -46,6 +46,7 @@ export function grpcRequest<RequestType extends jspb.Message, ResponseType exten
 }
 
 /* tslint:disable:no-any*/
+/* eslint:disable*/
 export function newGrpcMiddleware(): Middleware {
   return ({getState, dispatch}: MiddlewareAPI<{}>) => (next: Dispatch<{}>) => (action: any) => {
     // skip non-grpc actions

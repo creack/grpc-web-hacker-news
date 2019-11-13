@@ -19,6 +19,7 @@ PROTOS = ${GO_PROTOS} ${JS_PROTOS}
 .DEFAULT_GOAL = build
 
 .PHONY: start build clean
+.DELETE_ON_ERROR:
 
 PROTO_SRCS = proto/${NAME}.proto
 
@@ -38,6 +39,7 @@ client/proto/${NAME}.pb.go: server/proto/${NAME}.pb.go
 app/src/proto/${NAME}_pb_service.js: proto/${NAME}.proto .protoc_i
 	@mkdir -p $(dir $@)
 	${PROTOCTS} --ts_out=service=grpc-web:./app/src $<
+	@echo "/* eslint-disable */" | cat - $@ > $@.tmp && mv $@.tmp $@
 
 app/src/proto/${NAME}_pb_service.d.ts: app/src/proto/${NAME}_pb_service.js
 	@true
@@ -45,6 +47,7 @@ app/src/proto/${NAME}_pb_service.d.ts: app/src/proto/${NAME}_pb_service.js
 app/src/proto/${NAME}_pb.js: proto/${NAME}.proto .protoc_i
 	@mkdir -p $(dir $@)
 	${PROTOCTS} --js_out=import_style=commonjs,binary:./app/src $<
+	@echo "/* eslint-disable */" | cat - $@ > $@.tmp && mv $@.tmp $@
 
 app/src/proto/${NAME}_pb.d.ts: app/src/proto/${NAME}_pb_service.js
 	@true
@@ -59,7 +62,7 @@ CLIENT_SRCS = $(shell find ./client -name '*.go' -type f) client/proto/${NAME}.p
 	docker-compose build client
 	@touch $@
 
-APP_SRCS = $(shell find ./app -type f) ${JS_PROTOS}
+APP_SRCS = $(shell find ./app/src ./app/public ./app/tslint.json ./app/yarn.lock ./app/tslint.json -type f) ${JS_PROTOS}
 .app_i: app/Dockerfile ${APP_SRCS}
 	docker-compose build app
 	@touch $@
