@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/easyCZ/grpc-web-hacker-news/server/hackernews"
-	"github.com/easyCZ/grpc-web-hacker-news/server/middleware"
 
 	hackernews_pb "github.com/easyCZ/grpc-web-hacker-news/server/proto"
 	"github.com/easyCZ/grpc-web-hacker-news/server/proxy"
@@ -24,24 +23,26 @@ func main() {
 	wrappedGrpc := grpcweb.WrapServer(grpcServer)
 
 	router := chi.NewRouter()
+
 	router.Use(
 		chiMiddleware.Logger,
 		chiMiddleware.Recoverer,
 		cors.New(cors.Options{
 			AllowedOrigins:   []string{"*"},
-			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Csrf-Token", "X-Grpc-Web"},
 			ExposedHeaders:   []string{"Link"},
 			AllowCredentials: true,
 			MaxAge:           300, // Maximum value not ignored by any of major browsers
 		}).Handler,
-		middleware.NewGrpcWebMiddleware(wrappedGrpc).Handler, // Must come before general CORS handling
 	)
+
+	router.Handle("/*", wrappedGrpc)
 
 	router.Get("/article-proxy", proxy.Article)
 
-	println("ready")
-	if err := http.ListenAndServe(":8900", router); err != nil {
+ 	println("ready2")
+	if err := http.ListenAndServe(":8900", wrappedGrpc); err != nil {
 		grpclog.Fatalf("failed starting http2 server: %v", err)
 	}
 }

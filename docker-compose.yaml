@@ -1,0 +1,16 @@
+---
+version: '3.7'
+
+services:
+  server:
+    build: ./server
+    ports:
+      - 8900:8900
+    volumes:
+      - ./server:/app
+  app:
+    build: ./app
+    ports:
+      - 3000:3000
+    volumes:
+      - ./app:/app

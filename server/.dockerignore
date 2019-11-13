@@ -1,0 +1,9 @@
+*
+!vendor
+!go.sum
+!go.mod
+!main.go
+!proto
+!proxy
+!hackernews
+!.reflex

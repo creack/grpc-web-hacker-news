@@ -1,0 +1,9 @@
+*
+!src/
+!public/
+!package-lock.json
+!package.json
+!yarn.lock
+!tsconfig.json
+!tsconfig.test.json
+!tslint.json
