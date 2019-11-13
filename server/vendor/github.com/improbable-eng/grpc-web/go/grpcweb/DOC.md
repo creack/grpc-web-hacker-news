@@ -1,7 +1,6 @@
 # grpcweb
-```go
-import "github.com/improbable-eng/grpc-web/go/grpcweb"
-```
+--
+    import "github.com/improbable-eng/grpc-web/go/grpcweb"
 
 `grpcweb` implements the gRPC-Web spec as a wrapper around a gRPC-Go Server.
 
@@ -41,6 +40,14 @@ on gRPC server.
 This makes it easy to register all the relevant routes in your HTTP router of
 choice.
 
+#### func  WebsocketRequestOrigin
+
+```go
+func WebsocketRequestOrigin(req *http.Request) (string, error)
+```
+WebsocketRequestOrigin returns the host from which a websocket request made by a
+web browser originated.
+
 #### type Option
 
 ```go
@@ -48,12 +55,26 @@ type Option func(*options)
 ```
 
 
+#### func  WithAllowNonRootResource
+
+```go
+func WithAllowNonRootResource(allowNonRootResources bool) Option
+```
+WithAllowNonRootResource enables the gRPC wrapper to serve requests that have a
+path prefix added to the URL, before the service name and method placeholders.
+
+This should be set to false when exposing the endpoint as the root resource, to
+avoid the performance cost of path processing for every request.
+
+The default behaviour is `false`, i.e. always serves requests assuming there is
+no prefix to the gRPC endpoint.
+
 #### func  WithAllowedRequestHeaders
 
 ```go
 func WithAllowedRequestHeaders(headers []string) Option
 ```
-WithAllowedResponseHeaders allows for customizing what gRPC request headers a
+WithAllowedRequestHeaders allows for customizing what gRPC request headers a
 browser can add.
 
 This is controlling the CORS pre-flight `Access-Control-Allow-Headers` method
@@ -99,10 +120,31 @@ mechanism allows you to limit the availability of the APIs based on the domain
 name of the calling website (Origin). You can provide a function that filters
 the allowed Origin values.
 
-The default behaviour is `*`, i.e. to allow all calling websites.
+The default behaviour is to deny all requests from remote origins.
 
 The relevant CORS pre-flight docs:
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+
+#### func  WithWebsocketOriginFunc
+
+```go
+func WithWebsocketOriginFunc(websocketOriginFunc func(req *http.Request) bool) Option
+```
+WithWebsocketOriginFunc allows for customizing the acceptance of Websocket
+requests - usually to check that the origin is valid.
+
+The default behaviour is to check that the origin of the request matches the
+host of the request and deny all requests from remote origins.
+
+#### func  WithWebsockets
+
+```go
+func WithWebsockets(enableWebsockets bool) Option
+```
+WithWebsockets allows for handling grpc-web requests of websockets - enabling
+bidirectional requests.
+
+The default behaviour is false, i.e. to disallow websockets
 
 #### type WrappedGrpcServer
 
@@ -137,6 +179,16 @@ request and wraps it with a compatibility layer to transform it to a standard
 gRPC request for the wrapped gRPC server and transforms the response to comply
 with the gRPC-Web protocol.
 
+#### func (*WrappedGrpcServer) HandleGrpcWebsocketRequest
+
+```go
+func (w *WrappedGrpcServer) HandleGrpcWebsocketRequest(resp http.ResponseWriter, req *http.Request)
+```
+HandleGrpcWebsocketRequest takes a HTTP request that is assumed to be a
+gRPC-Websocket request and wraps it with a compatibility layer to transform it
+to a standard gRPC request for the wrapped gRPC server and transforms the
+response to comply with the gRPC-Web protocol.
+
 #### func (*WrappedGrpcServer) IsAcceptableGrpcCorsRequest
 
 ```go
@@ -155,6 +207,14 @@ func (w *WrappedGrpcServer) IsGrpcWebRequest(req *http.Request) bool
 ```
 IsGrpcWebRequest determines if a request is a gRPC-Web request by checking that
 the "content-type" is "application/grpc-web" and that the method is POST.
+
+#### func (*WrappedGrpcServer) IsGrpcWebSocketRequest
+
+```go
+func (w *WrappedGrpcServer) IsGrpcWebSocketRequest(req *http.Request) bool
+```
+IsGrpcWebSocketRequest determines if a request is a gRPC-Web request by checking
+that the "Sec-Websocket-Protocol" header value is "grpc-websockets"
 
 #### func (*WrappedGrpcServer) ServeHTTP
 

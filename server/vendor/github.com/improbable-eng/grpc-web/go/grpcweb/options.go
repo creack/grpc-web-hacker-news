@@ -3,11 +3,14 @@
 
 package grpcweb
 
+import "net/http"
+
 var (
 	defaultOptions = &options{
 		allowedRequestHeaders:          []string{"*"},
 		corsForRegisteredEndpointsOnly: true,
-		originFunc:                     func(origin string) bool { return true },
+		originFunc:                     func(origin string) bool { return false },
+		allowNonRootResources:          false,
 	}
 )
 
@@ -15,6 +18,9 @@ type options struct {
 	allowedRequestHeaders          []string
 	corsForRegisteredEndpointsOnly bool
 	originFunc                     func(origin string) bool
+	enableWebsockets               bool
+	websocketOriginFunc            func(req *http.Request) bool
+	allowNonRootResources          bool
 }
 
 func evaluateOptions(opts []Option) *options {
@@ -34,7 +40,7 @@ type Option func(*options)
 // availability of the APIs based on the domain name of the calling website (Origin). You can provide a function that
 // filters the allowed Origin values.
 //
-// The default behaviour is `*`, i.e. to allow all calling websites.
+// The default behaviour is to deny all requests from remote origins.
 //
 // The relevant CORS pre-flight docs:
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
@@ -56,7 +62,7 @@ func WithCorsForRegisteredEndpointsOnly(onlyRegistered bool) Option {
 	}
 }
 
-// WithAllowedResponseHeaders allows for customizing what gRPC request headers a browser can add.
+// WithAllowedRequestHeaders allows for customizing what gRPC request headers a browser can add.
 //
 // This is controlling the CORS pre-flight `Access-Control-Allow-Headers` method and applies to *all* gRPC handlers.
 // However, a special `*` value can be passed in that allows
@@ -74,5 +80,37 @@ func WithCorsForRegisteredEndpointsOnly(onlyRegistered bool) Option {
 func WithAllowedRequestHeaders(headers []string) Option {
 	return func(o *options) {
 		o.allowedRequestHeaders = headers
+	}
+}
+
+// WithWebsockets allows for handling grpc-web requests of websockets - enabling bidirectional requests.
+//
+// The default behaviour is false, i.e. to disallow websockets
+func WithWebsockets(enableWebsockets bool) Option {
+	return func(o *options) {
+		o.enableWebsockets = enableWebsockets
+	}
+}
+
+// WithWebsocketOriginFunc allows for customizing the acceptance of Websocket requests - usually to check that the origin
+// is valid.
+//
+// The default behaviour is to check that the origin of the request matches the host of the request and deny all requests from remote origins.
+func WithWebsocketOriginFunc(websocketOriginFunc func(req *http.Request) bool) Option {
+	return func(o *options) {
+		o.websocketOriginFunc = websocketOriginFunc
+	}
+}
+
+// WithAllowNonRootResource enables the gRPC wrapper to serve requests that have a path prefix
+// added to the URL, before the service name and method placeholders.
+//
+// This should be set to false when exposing the endpoint as the root resource, to avoid
+// the performance cost of path processing for every request.
+//
+// The default behaviour is `false`, i.e. always serves requests assuming there is no prefix to the gRPC endpoint.
+func WithAllowNonRootResource(allowNonRootResources bool) Option {
+	return func(o *options) {
+		o.allowNonRootResources = allowNonRootResources
 	}
 }
