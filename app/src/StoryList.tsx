@@ -11,7 +11,7 @@ type StoryListProps = {
 const StoryList: React.SFC<StoryListProps> = (props) => {
   return (
     <Item.Group divided={true}>
-      {props.stories.map((story, i) =>
+      {(props.stories || []).map((story, i) =>
         <Item
           style={props.selected && story.id === props.selected.id
             ? {'backgroundColor': 'rgba(0, 0, 0, 0.08)'}

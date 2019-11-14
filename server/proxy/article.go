@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +16,8 @@ func Article(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Must specify the url to request", http.StatusBadRequest)
 		return
 	}
+	fmt.Fprintf(w, "<p>%s</p><br/>\n", url)
+	return
 	proxyReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		http.Error(w, "Invalid url to request", http.StatusBadRequest)

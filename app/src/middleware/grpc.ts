@@ -1,16 +1,18 @@
 import { Action, Dispatch, Middleware, MiddlewareAPI } from 'redux';
+//import { Action } from 'redux';
 import { grpc } from '@improbable-eng/grpc-web';
 import * as jspb from 'google-protobuf';
 
 const GRPC_WEB_REQUEST = 'GRPC_WEB_REQUEST';
 
+
 // Descriptor of a grpc-web payload
 // life-cycle methods mirror grpc-web but allow for an action to be dispatched when triggered
-export type GrpcActionPayload<RequestType extends jspb.Message, ResponseType extends jspb.Message> = {
+export type GrpcActionPayload<RequestType extends jspb.Message, ResponseType extends grpc.ProtobufMessage> = {
   // The method descriptor to use for a gRPC request, equivalent to grpc.invoke(methodDescriptor, ...)
   methodDescriptor: grpc.MethodDefinition<RequestType, ResponseType>,
   // The transport to use for grpc-web, automatically selected if empty
-  transport?: Transport,
+  transport?: grpc.TransportFactory,
   // toggle debug messages
   debug?: boolean,
   // the URL of a host this request should go to
@@ -36,7 +38,8 @@ export type GrpcAction<RequestType extends jspb.Message, ResponseType extends js
 };
 
 // Action creator, Use it to create a new grpc action
-export function grpcRequest<RequestType extends jspb.Message, ResponseType extends jspb.Message>(
+export function
+grpcRequest<RequestType extends jspb.Message, ResponseType extends jspb.Message>(
   payload: GrpcActionPayload<RequestType, ResponseType>
 ): GrpcAction<RequestType, ResponseType> {
   return {
@@ -46,9 +49,8 @@ export function grpcRequest<RequestType extends jspb.Message, ResponseType exten
 }
 
 /* tslint:disable:no-any*/
-/* eslint:disable*/
 export function newGrpcMiddleware(): Middleware {
-  return ({getState, dispatch}: MiddlewareAPI<{}>) => (next: Dispatch<{}>) => (action: any) => {
+  return ({getState, dispatch}: MiddlewareAPI) => (next: Dispatch) => (action: any) => {
     // skip non-grpc actions
     if (!isGrpcWebUnaryAction(action)) {
       return next(action);
@@ -98,5 +100,4 @@ function isGrpcWebPayload(action: any): boolean {
     action.payload.onEnd &&
     action.payload.host;
 }
-
 /* tslint:enable:no-any*/

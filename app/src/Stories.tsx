@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
 import { RootState } from './store';
 import { Container, Grid, Header } from 'semantic-ui-react';
 import StoryList from './StoryList';
@@ -54,7 +55,7 @@ class Stories extends React.Component<StoriesProps, {}> {
 
 function mapStateToProps(state: RootState) {
   return {
-    stories: Object.keys(state.stories.stories).map(key => state.stories.stories[key]),
+    //stories: Object.keys(state.stories.stories).map(key => state.stories.stories[key]),
     loading: state.stories.loading,
     error: state.stories.error,
     selected: state.stories.selected,
